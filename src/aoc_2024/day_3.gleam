@@ -1,7 +1,7 @@
+import aoc_2024/utils
 import gleam/int
 import gleam/list
 import gleam/regexp
-import gleam/result
 import gleam/string
 
 pub fn pt_1(input: String) {
@@ -12,8 +12,7 @@ pub fn pt_1(input: String) {
 
   mul_expressions
   |> list.map(parse_mul_expression)
-  |> result.all()
-  |> result.map(int.sum)
+  |> int.sum
 }
 
 fn parse_mul_expression(input: String) {
@@ -21,9 +20,8 @@ fn parse_mul_expression(input: String) {
 
   regexp.scan(number_re, input)
   |> list.map(fn(match) { match.content })
-  |> list.map(int.parse)
-  |> result.all()
-  |> result.map(int.product)
+  |> list.map(utils.int_parse_unwrap)
+  |> int.product
 }
 
 pub fn pt_2(input: String) {
@@ -31,8 +29,7 @@ pub fn pt_2(input: String) {
   |> string.split("do()")
   |> list.map(drop_donts)
   |> list.map(pt_1)
-  |> result.all
-  |> result.map(int.sum)
+  |> int.sum
 }
 
 fn drop_donts(input: String) {
