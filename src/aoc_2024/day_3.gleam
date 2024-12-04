@@ -23,7 +23,13 @@ pub fn pt_1(input: String) {
 }
 
 pub fn pt_2(input: String) {
-  todo as "part 2 not implemented"
+  let dos = input |> string.split("do()")
+  dos
+  |> list.map(fn(do) {
+    let assert [head, ..] = do |> string.split("don't()")
+    pt_1(head)
+  })
+  |> int.sum
 }
 
 pub fn assert_unwrap(result: Result(t, _)) -> t {
