@@ -53,3 +53,20 @@ pub fn opposite_direction(direction: Direction) -> Direction {
   let #(x, y) = direction
   #(-x, -y)
 }
+
+pub type DirectionOpts {
+  Orthogonal
+  Diagonal
+  All
+}
+
+pub fn get_directions(opts: DirectionOpts) {
+  let orthogonal = [#(1, 0), #(0, 1), #(-1, 0), #(0, -1)]
+  let diagonal = [#(1, 1), #(-1, 1), #(-1, -1), #(1, -1)]
+
+  case opts {
+    Orthogonal -> orthogonal
+    Diagonal -> diagonal
+    All -> list.flatten([orthogonal, diagonal])
+  }
+}

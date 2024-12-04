@@ -13,7 +13,7 @@ pub fn pt_1(input: String) {
 fn solve_1(input_matrix: matrix.Matrix(String)) {
   input_matrix
   |> matrix.get_coords
-  |> list.map(fn(coord) { solve_coord_1(input_matrix, coord) })
+  |> list.map(solve_coord_1(input_matrix, _))
   |> int.sum
 }
 
@@ -21,24 +21,11 @@ fn solve_coord_1(
   input_matrix: matrix.Matrix(String),
   coord: matrix.Coord,
 ) -> Int {
-  let directions = [
-    #(1, 0),
-    #(1, 1),
-    #(0, 1),
-    #(-1, 1),
-    #(-1, 0),
-    #(-1, -1),
-    #(0, -1),
-    #(1, -1),
-  ]
-
   let word = "XMAS"
 
-  directions
-  |> list.map(fn(direction) {
-    solve_coord_direction(input_matrix, coord, direction, 0, word)
-  })
-  |> list.count(fn(bool) { bool })
+  matrix.get_directions(matrix.All)
+  |> list.map(solve_coord_direction(input_matrix, coord, _, 0, word))
+  |> list.count(fn(b) { b })
 }
 
 fn solve_coord_direction(
@@ -50,9 +37,9 @@ fn solve_coord_direction(
 ) {
   let expected_char = word |> string.slice(word_index, 1)
   let char = input_matrix |> matrix.at(location)
+
   use <- bool.guard(expected_char == "", True)
   use <- bool.guard(result.is_error(char), False)
-
   case { char |> utils.assert_unwrap } == expected_char {
     True ->
       solve_coord_direction(
@@ -73,18 +60,17 @@ pub fn pt_2(input: String) {
 fn solve_2(input_matrix: matrix.Matrix(String)) {
   input_matrix
   |> matrix.get_coords
-  |> list.map(fn(coord) { solve_coord_2(input_matrix, coord) })
-  |> list.count(fn(bool) { bool })
+  |> list.map(solve_coord_2(input_matrix, _))
+  |> list.count(fn(b) { b })
 }
 
 fn solve_coord_2(
   input_matrix: matrix.Matrix(String),
   coord: matrix.Coord,
 ) -> Bool {
-  let directions = [#(1, 1), #(-1, 1), #(-1, -1), #(1, -1)]
   let word = "MAS"
 
-  directions
+  matrix.get_directions(matrix.Diagonal)
   |> list.map(fn(direction) {
     solve_coord_direction(
       input_matrix,
@@ -94,6 +80,6 @@ fn solve_coord_2(
       word,
     )
   })
-  |> list.count(fn(bool) { bool })
+  |> list.count(fn(b) { b })
   |> fn(val) { val >= 2 }
 }
