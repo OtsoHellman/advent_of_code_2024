@@ -47,5 +47,31 @@ fn parse_string_pair_to_tuples(pair: List(String)) {
 }
 
 pub fn pt_2(input: String) {
-  todo
+  case solve_2(input) {
+    Ok(result) -> result
+    Error(_) -> 0
+  }
+}
+
+fn solve_2(input: String) -> Result(Int, Nil) {
+  use int_pairs <- result.try(
+    input
+    |> string.split("\n")
+    |> list.map(string.split(_, "   "))
+    |> list.map(parse_string_pair_to_tuples)
+    |> result.all(),
+  )
+
+  let #(list1, list2) = int_pairs |> list.unzip
+
+  list1
+  |> list.map(fn(number) { n_of_occurrences(list2, number) * number })
+  |> int.sum
+  |> Ok
+}
+
+fn n_of_occurrences(list: List(Int), number: Int) {
+  list
+  |> list.filter(fn(x) { x == number })
+  |> list.length
 }
