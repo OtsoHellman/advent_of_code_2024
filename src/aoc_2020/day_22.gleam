@@ -43,7 +43,6 @@ fn calculate_winning_score(deck: List(Int)) -> Int {
   |> list.index_map(fn(card, i) { { i + 1 } * card })
   |> int.sum
 }
-
-pub fn pt_2(input: String) {
-  todo as "part 2 not implemented"
-}
+// pub fn pt_2(input: String) {
+//   todo as "part 2 not implemented"
+// }
