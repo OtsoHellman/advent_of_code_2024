@@ -1,4 +1,4 @@
-import aoc_2024/utils
+import aoc_2024/utils/resultx
 import gleam/int
 import gleam/list
 import gleam/regexp
@@ -20,7 +20,7 @@ fn parse_mul_expression(input: String) {
 
   regexp.scan(number_re, input)
   |> list.map(fn(match) { match.content })
-  |> list.map(utils.int_parse_unwrap)
+  |> list.map(resultx.int_parse_unwrap)
   |> int.product
 }
 

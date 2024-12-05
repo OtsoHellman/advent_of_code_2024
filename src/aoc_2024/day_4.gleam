@@ -1,5 +1,5 @@
-import aoc_2024/grid
-import aoc_2024/utils
+import aoc_2024/lib/grid
+import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/int
 import gleam/list
@@ -37,7 +37,7 @@ fn solve_coord_direction(
 
   use <- bool.guard(expected_char == "", True)
   use <- bool.guard(result.is_error(char), False)
-  case { char |> utils.assert_unwrap } == expected_char {
+  case { char |> resultx.assert_unwrap } == expected_char {
     True ->
       solve_coord_direction(
         input_grid,

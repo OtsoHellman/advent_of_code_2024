@@ -1,4 +1,4 @@
-import aoc_2024/utils
+import aoc_2024/utils/resultx
 import gleam/list
 import gleam/result
 import gleam/string
@@ -41,7 +41,7 @@ pub fn at(grid: Grid(t), coord: Coord) -> Result(t, Nil) {
 
 fn length(grid: Grid(t)) -> #(Int, Int) {
   let rows = grid |> glearray.length
-  let cols = grid |> glearray.get(0) |> utils.assert_unwrap |> glearray.length
+  let cols = grid |> glearray.get(0) |> resultx.assert_unwrap |> glearray.length
   #(rows, cols)
 }
 
