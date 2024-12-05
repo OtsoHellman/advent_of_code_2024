@@ -2,6 +2,7 @@ import aoc_2024/utils
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/order
 import gleam/pair
 import gleam/result
 import gleam/string
@@ -34,7 +35,8 @@ fn parse_updates_input(input: String) {
 fn solve_1(rules: List(#(Int, Int)), updates: List(List(Int))) -> Int {
   updates
   |> list.filter(verify_rules(rules, _))
-  |> list.map(find_middle_element)
+  |> list.map(utils.find_middle_element)
+  |> list.map(utils.assert_unwrap)
   |> int.sum
 }
 
@@ -52,20 +54,14 @@ fn verify_rules(rules: List(#(Int, Int)), update: List(Int)) -> Bool {
 fn verify_single_rule(rule: #(Int, Int), update: List(Int)) {
   let #(left, right) = rule
 
-  let update_with_indices =
-    update
-    |> list.index_map(fn(key, i) { #(key, i) })
-
   let left_index =
-    update_with_indices
-    |> list.find(fn(item) { item.0 == left })
-    |> result.map(pair.second)
+    update
+    |> utils.find_first_index(fn(item) { item == left })
     |> utils.assert_unwrap
 
   let right_index =
-    update_with_indices
-    |> list.find(fn(item) { item.0 == right })
-    |> result.map(pair.second)
+    update
+    |> utils.find_first_index(fn(item) { item == right })
 
   case right_index {
     Ok(index) -> left_index < index
@@ -73,13 +69,44 @@ fn verify_single_rule(rule: #(Int, Int), update: List(Int)) {
   }
 }
 
-fn find_middle_element(update: List(Int)) -> Int {
-  update
-  |> list.drop({ list.length(update) - 1 } / 2)
-  |> list.first
-  |> utils.assert_unwrap
+pub fn pt_2(input: String) {
+  let assert [rule_input, updates_input] = input |> string.split("\n\n")
+  let rules = rule_input |> parse_rule_input
+  let updates = updates_input |> parse_updates_input
+  solve_2(rules, updates)
 }
 
-pub fn pt_2(input: String) {
-  todo as "part 2 not implemented"
+fn solve_2(rules: List(#(Int, Int)), updates: List(List(Int))) -> Int {
+  updates
+  |> list.filter(fn(item) { !verify_rules(rules, item) })
+  |> list.map(sort_update(rules, _))
+  |> list.map(utils.find_middle_element)
+  |> list.map(utils.assert_unwrap)
+  |> int.sum
+}
+
+fn sort_update(rules: List(#(Int, Int)), update: List(Int)) -> List(Int) {
+  update
+  |> list.sort(fn(left, right) { sort_two_elements(rules, #(left, right)) })
+}
+
+fn sort_two_elements(rules: List(#(Int, Int)), pair: #(Int, Int)) -> order.Order {
+  let #(left, right) = pair
+
+  let rule =
+    rules
+    |> list.find(fn(rule) {
+      let #(rule_left, rule_right) = rule
+      { rule_left == left && rule_right == right }
+      || { rule_left == right && rule_right == left }
+    })
+
+  case rule {
+    Ok(#(rule_left, _)) ->
+      case rule_left == left {
+        True -> order.Lt
+        False -> order.Gt
+      }
+    Error(_) -> order.Eq
+  }
 }
