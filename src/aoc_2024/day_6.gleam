@@ -1,7 +1,11 @@
 import aoc_2024/lib/grid
 import aoc_2024/utils/resultx
+import gleam/bool
 import gleam/dict
+import gleam/io
 import gleam/list
+import gleam/otp/task
+import gleam/pair
 import gleam/result
 
 pub fn pt_1(input: String) {
@@ -28,6 +32,7 @@ pub fn pt_1(input: String) {
     |> resultx.assert_unwrap
 
   get_visited_coords(grid, starting_coord, starting_direction, [])
+  |> resultx.assert_unwrap
   |> list.unique
   |> list.length
 }
@@ -36,9 +41,15 @@ fn get_visited_coords(
   grid: grid.Grid(String),
   coord: grid.Coord,
   direction: grid.Direction,
-  visited_coords: List(grid.Coord),
-) -> List(grid.Coord) {
-  let visited_coords = list.flatten([visited_coords, [coord]])
+  visited_positions: List(#(grid.Coord, grid.Direction)),
+) -> Result(List(grid.Coord), Nil) {
+  let new_position = #(coord, direction)
+  use <- bool.guard(
+    visited_positions
+      |> list.any(fn(item) { item == new_position }),
+    Error(Nil),
+  )
+  let visited_positions = list.flatten([visited_positions, [new_position]])
 
   let next_coord = grid.move(coord, direction)
   case grid |> grid.at(next_coord) {
@@ -47,13 +58,56 @@ fn get_visited_coords(
         grid,
         coord,
         direction |> grid.turn(grid.TurnRight),
-        visited_coords,
+        visited_positions,
       )
-    Ok(_) -> get_visited_coords(grid, next_coord, direction, visited_coords)
-    Error(_) -> visited_coords
+    Ok(_) -> get_visited_coords(grid, next_coord, direction, visited_positions)
+    Error(_) -> visited_positions |> list.map(pair.first) |> Ok
   }
 }
 
 pub fn pt_2(input: String) {
-  todo as "part 2 not implemented"
+  let direction_arrows =
+    dict.from_list([
+      #("^", grid.Up),
+      #(">", grid.Right),
+      #("v", grid.Down),
+      #("<", grid.Left),
+    ])
+  let grid = input |> grid.parse_input_to_string_grid
+  let starting_coord =
+    direction_arrows
+    |> dict.keys()
+    |> list.map(fn(arrow) { grid |> grid.find(arrow) })
+    |> result.values
+    |> list.first
+    |> resultx.assert_unwrap
+
+  let starting_direction =
+    grid
+    |> grid.at(starting_coord)
+    |> result.try(dict.get(direction_arrows, _))
+    |> resultx.assert_unwrap
+
+  let visited_coords =
+    get_visited_coords(grid, starting_coord, starting_direction, [])
+    |> resultx.assert_unwrap
+    |> list.unique
+
+  visited_coords
+  |> list.map(try_obstruction(grid, _, starting_coord, starting_direction))
+  |> list.count(result.is_error)
+}
+
+fn try_obstruction(
+  grid: grid.Grid(String),
+  coord: grid.Coord,
+  starting_coord: grid.Coord,
+  starting_direction: grid.Direction,
+) {
+  get_visited_coords(
+    grid |> grid.copy_set(coord, "#") |> resultx.assert_unwrap,
+    starting_coord,
+    starting_direction,
+    [],
+  )
 }

@@ -49,6 +49,20 @@ pub fn at(grid: Grid(t), coord: Coord) -> Result(t, Nil) {
   grid |> glearray.get(row) |> result.try(glearray.get(_, col))
 }
 
+pub fn copy_set(grid: Grid(t), coord: Coord, value: t) {
+  let #(x, y) = coord
+
+  grid
+  |> glearray.copy_set(
+    x,
+    grid
+      |> glearray.get(x)
+      |> resultx.assert_unwrap
+      |> glearray.copy_set(y, value)
+      |> resultx.assert_unwrap,
+  )
+}
+
 fn length(grid: Grid(t)) -> #(Int, Int) {
   let rows = grid |> glearray.length
   let cols = grid |> glearray.get(0) |> resultx.assert_unwrap |> glearray.length
