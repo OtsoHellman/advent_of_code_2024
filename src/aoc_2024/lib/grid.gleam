@@ -1,4 +1,6 @@
+import aoc_2024/utils/listx
 import aoc_2024/utils/resultx
+import gleam/int
 import gleam/list
 import gleam/result
 import gleam/string
@@ -21,6 +23,11 @@ pub type Direction {
   UpLeft
 }
 
+pub type Turn {
+  TurnRight
+  TurnLeft
+}
+
 const direction_map: List(#(Direction, #(Int, Int))) = [
   #(Up, #(0, 1)), #(UpRight, #(1, 1)), #(Right, #(1, 0)), #(DownRight, #(1, -1)),
   #(Down, #(0, -1)), #(DownLeft, #(-1, -1)), #(Left, #(-1, 0)),
@@ -30,7 +37,10 @@ const direction_map: List(#(Direction, #(Int, Int))) = [
 pub fn parse_input_to_string_grid(input: String) -> Grid(String) {
   input
   |> string.split("\n")
-  |> list.map(fn(line) { line |> string.split("") |> glearray.from_list })
+  |> list.map(fn(line) { line |> string.split("") })
+  |> list.transpose
+  |> list.map(list.reverse)
+  |> list.map(glearray.from_list)
   |> glearray.from_list
 }
 
@@ -53,6 +63,12 @@ pub fn get_coords(grid: Grid(t)) -> List(Coord) {
     list.range(0, cols - 1)
     |> list.map(fn(col) { #(row, col) })
   })
+}
+
+pub fn find(grid: Grid(t), item: t) -> Result(Coord, Nil) {
+  grid
+  |> get_coords
+  |> list.find(fn(coord) { grid |> at(coord) |> resultx.assert_unwrap == item })
 }
 
 fn parse_direction(direction: Direction) -> #(Int, Int) {
@@ -80,6 +96,16 @@ pub fn opposite_direction(direction: Direction) -> Direction {
   #(-x, -y) |> to_direction
 }
 
+pub fn turn(direction: Direction, turn: Turn) -> Direction {
+  let #(x, y) = direction |> parse_direction
+
+  case turn {
+    TurnRight -> #(y, -x)
+    TurnLeft -> #(-y, x)
+  }
+  |> to_direction
+}
+
 pub type DirectionOpts {
   Orthogonal
   Diagonal
@@ -93,6 +119,6 @@ pub fn get_directions(opts: DirectionOpts) {
   case opts {
     Orthogonal -> orthogonal
     Diagonal -> diagonal
-    All -> list.flatten([orthogonal, diagonal])
+    All -> list.interleave([orthogonal, diagonal])
   }
 }
