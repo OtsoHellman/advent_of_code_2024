@@ -26,7 +26,7 @@ pub fn pt_1(input: String) {
   |> list.filter(fn(equation) {
     let #(goal, nums) = equation
     let assert Ok(#(start, nums)) = list.pop(nums, fn(_) { True })
-    is_valid_equation(nums, goal, start)
+    is_valid_equation(nums, goal, start, [Sum, Product])
   })
   |> list.map(pair.first)
   |> int.sum
@@ -38,16 +38,21 @@ type Operation {
   Concat
 }
 
-fn is_valid_equation(nums: List(Int), goal: Int, agg: Int) -> Bool {
+fn is_valid_equation(
+  nums: List(Int),
+  goal: Int,
+  agg: Int,
+  operations: List(Operation),
+) -> Bool {
   use <- bool.guard(goal < agg, False)
   use <- bool.guard(list.is_empty(nums) && agg < goal, False)
   use <- bool.guard(list.is_empty(nums), True)
 
-  [Sum, Product, Concat]
+  operations
   |> list.any(fn(operation) {
     let assert Ok(#(head, nums)) = list.pop(nums, fn(_) { True })
 
-    is_valid_equation(nums, goal, operate(operation, agg, head))
+    is_valid_equation(nums, goal, operate(operation, agg, head), operations)
   })
 }
 
@@ -64,5 +69,14 @@ fn operate(operation: Operation, a: Int, b: Int) {
 }
 
 pub fn pt_2(input: String) {
-  parse(input) |> list.first
+  let equations = parse(input)
+
+  equations
+  |> list.filter(fn(equation) {
+    let #(goal, nums) = equation
+    let assert Ok(#(start, nums)) = list.pop(nums, fn(_) { True })
+    is_valid_equation(nums, goal, start, [Sum, Product, Concat])
+  })
+  |> list.map(pair.first)
+  |> int.sum
 }
