@@ -1,9 +1,10 @@
+import aoc_2024/lib/conc
 import aoc_2024/lib/grid
+import aoc_2024/lib/perf
 import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/dict
 import gleam/list
-import gleam/otp/task
 import gleam/pair
 import gleam/result
 import gleam/set
@@ -96,12 +97,7 @@ pub fn pt_2(input: String) {
 
   visited_coords
   |> list.filter(fn(coord) { coord != starting_coord })
-  |> list.map(fn(coord) {
-    task.async(fn() {
-      try_obstruction(grid, coord, starting_coord, starting_direction)
-    })
-  })
-  |> list.map(task.await(_, 100))
+  |> conc.map(try_obstruction(grid, _, starting_coord, starting_direction))
   |> list.count(result.is_error)
 }
 

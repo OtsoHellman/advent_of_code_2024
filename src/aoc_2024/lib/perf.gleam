@@ -4,8 +4,7 @@ import gleam/io
 
 pub fn start(name: String) {
   let start = birl.now() |> birl.to_unix_milli
-  "" |> io.debug
-  { "starting " <> name } |> io.debug
+  { "\nstarting " <> name } |> io.println
 
   let name = case name {
     "" -> ""
@@ -14,9 +13,15 @@ pub fn start(name: String) {
 
   let stop = fn() {
     let end = birl.now() |> birl.to_unix_milli
-    "" |> io.debug
-    { name <> int.to_string(end - start) <> "ms" } |> io.debug
+    { name <> int.to_string(end - start) <> "ms" } |> io.println
   }
 
   stop
+}
+
+pub fn measure(name: String, fun: fn() -> a) {
+  let stop = start(name)
+  let value = fun()
+  stop()
+  value
 }

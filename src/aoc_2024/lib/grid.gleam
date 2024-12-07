@@ -1,6 +1,4 @@
-import aoc_2024/utils/listx
 import aoc_2024/utils/resultx
-import gleam/int
 import gleam/list
 import gleam/result
 import gleam/string

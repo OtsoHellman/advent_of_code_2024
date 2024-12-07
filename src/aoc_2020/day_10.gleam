@@ -1,11 +1,8 @@
 import aoc_2024/lib/cache
-import aoc_2024/lib/perf
 import aoc_2024/utils/resultx
-import carpenter/table
 import gleam/bool
 import gleam/dict
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/string
 
