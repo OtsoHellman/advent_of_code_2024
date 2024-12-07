@@ -28,7 +28,7 @@ pub fn pt_1(input: String) {
     let #(goal, nums) = equation
     let #(start, nums) = listx.pop(nums)
 
-    is_valid_equation(nums, [Sum, Product], goal, start)
+    is_valid_equation([Sum, Product], nums, goal, start)
   })
   |> list.map(pair.first)
   |> int.sum
@@ -41,8 +41,8 @@ type Operation {
 }
 
 fn is_valid_equation(
-  nums: List(Int),
   operations: List(Operation),
+  nums: List(Int),
   goal: Int,
   agg: Int,
 ) -> Bool {
@@ -55,7 +55,7 @@ fn is_valid_equation(
     let #(head, nums) = listx.pop(nums)
     let agg = operate(operation, agg, head)
 
-    is_valid_equation(nums, operations, goal, agg)
+    is_valid_equation(operations, nums, goal, agg)
   })
 }
 
@@ -75,7 +75,7 @@ pub fn pt_2(input: String) {
     let #(goal, nums) = equation
     let #(start, nums) = listx.pop(nums)
 
-    is_valid_equation(nums, [Sum, Product, Concat], goal, start)
+    is_valid_equation([Sum, Product, Concat], nums, goal, start)
   })
   |> list.map(pair.first)
   |> int.sum

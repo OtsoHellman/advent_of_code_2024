@@ -1,4 +1,5 @@
 import aoc_2024/lib/cache
+import aoc_2024/lib/perf
 import aoc_2024/utils/resultx
 import carpenter/table
 import gleam/bool
@@ -33,22 +34,16 @@ pub fn pt_2(input: String) {
   let start = nums |> list.first |> resultx.assert_unwrap
   let end = nums |> list.last |> resultx.assert_unwrap
 
-  let cache = cache.create()
-
-  get_n_of_arrangements(nums, start, end, cache) |> io.debug
+  cache.create()
+  get_n_of_arrangements(nums, start, end)
 }
 
-fn get_n_of_arrangements(
-  nums: List(Int),
-  start: Int,
-  end: Int,
-  cache: table.Set(Int, Int),
-) -> Int {
+fn get_n_of_arrangements(nums: List(Int), start: Int, end: Int) -> Int {
   use <- bool.guard(start == end, 1)
   use <- bool.guard(nums |> list.contains(start) |> bool.negate, 0)
-  use <- cache.memoize(cache, start)
+  use <- cache.try_memo(start)
 
   list.range(1, 3)
-  |> list.map(fn(jump) { get_n_of_arrangements(nums, start + jump, end, cache) })
+  |> list.map(fn(jump) { get_n_of_arrangements(nums, start + jump, end) })
   |> int.sum
 }
