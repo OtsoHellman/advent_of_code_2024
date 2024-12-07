@@ -1,7 +1,8 @@
+import aoc_2024/utils/intx
+import aoc_2024/utils/listx
 import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/pair
 import gleam/string
@@ -25,8 +26,9 @@ pub fn pt_1(input: String) {
   equations
   |> list.filter(fn(equation) {
     let #(goal, nums) = equation
-    let assert Ok(#(start, nums)) = list.pop(nums, fn(_) { True })
-    is_valid_equation(nums, goal, start, [Sum, Product])
+    let #(start, nums) = listx.pop(nums)
+
+    is_valid_equation(nums, [Sum, Product], goal, start)
   })
   |> list.map(pair.first)
   |> int.sum
@@ -40,9 +42,9 @@ type Operation {
 
 fn is_valid_equation(
   nums: List(Int),
+  operations: List(Operation),
   goal: Int,
   agg: Int,
-  operations: List(Operation),
 ) -> Bool {
   use <- bool.guard(goal < agg, False)
   use <- bool.guard(list.is_empty(nums) && agg < goal, False)
@@ -50,9 +52,10 @@ fn is_valid_equation(
 
   operations
   |> list.any(fn(operation) {
-    let assert Ok(#(head, nums)) = list.pop(nums, fn(_) { True })
+    let #(head, nums) = listx.pop(nums)
+    let agg = operate(operation, agg, head)
 
-    is_valid_equation(nums, goal, operate(operation, agg, head), operations)
+    is_valid_equation(nums, operations, goal, agg)
   })
 }
 
@@ -60,11 +63,7 @@ fn operate(operation: Operation, a: Int, b: Int) {
   case operation {
     Sum -> a + b
     Product -> a * b
-    Concat ->
-      [a, b]
-      |> list.map(int.to_string)
-      |> string.concat()
-      |> resultx.int_parse_unwrap
+    Concat -> intx.undigits([a, b])
   }
 }
 
@@ -74,8 +73,9 @@ pub fn pt_2(input: String) {
   equations
   |> list.filter(fn(equation) {
     let #(goal, nums) = equation
-    let assert Ok(#(start, nums)) = list.pop(nums, fn(_) { True })
-    is_valid_equation(nums, goal, start, [Sum, Product, Concat])
+    let #(start, nums) = listx.pop(nums)
+
+    is_valid_equation(nums, [Sum, Product, Concat], goal, start)
   })
   |> list.map(pair.first)
   |> int.sum

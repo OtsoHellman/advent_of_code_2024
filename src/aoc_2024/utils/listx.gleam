@@ -37,3 +37,9 @@ pub fn at(list: List(a), i: Int) -> a {
   let new_i = int.modulo(i, list.length(list)) |> resultx.assert_unwrap
   list |> at_try(new_i) |> resultx.assert_unwrap
 }
+
+pub fn pop(list: List(a)) -> #(a, List(a)) {
+  let assert Ok(result) = list.pop(list, fn(_) { True })
+
+  result
+}
