@@ -1,4 +1,5 @@
 import aoc_2024/utils/resultx
+import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -42,6 +43,27 @@ pub fn parse_input_to_string_grid(input: String) -> Grid(String) {
   |> glearray.from_list
 }
 
+fn to_string(grid: Grid(String)) {
+  grid
+  |> glearray.to_list
+  |> list.map(glearray.to_list)
+  |> list.map(list.reverse)
+  |> list.transpose
+  |> list.map(string.join(_, ""))
+  |> string.join("\n")
+}
+
+pub fn print(grid: Grid(String)) {
+  { "\n\n" <> to_string(grid) <> "\n" } |> io.println
+}
+
+pub fn conditional_print(
+  grid: Grid(String),
+  predicate: fn(Coord) -> Result(String, Nil),
+) {
+  grid |> map_with_coord(predicate) |> print
+}
+
 pub fn map(grid: Grid(a), fun: fn(a) -> v) -> Grid(v) {
   grid
   |> glearray.to_list
@@ -51,6 +73,20 @@ pub fn map(grid: Grid(a), fun: fn(a) -> v) -> Grid(v) {
   |> glearray.from_list
 }
 
+pub fn map_with_coord(
+  grid: Grid(a),
+  fun: fn(Coord) -> Result(a, Nil),
+) -> Grid(a) {
+  grid
+  |> get_coords
+  |> list.fold(grid, fn(grid, coord) {
+    case fun(coord) {
+      Ok(value) -> copy_set(grid, coord, value) |> resultx.assert_unwrap
+      Error(_) -> grid
+    }
+  })
+}
+
 pub fn parse_input_to_int_grid(input: String) -> Grid(Int) {
   input |> parse_input_to_string_grid |> map(resultx.int_parse_unwrap)
 }
@@ -58,6 +94,10 @@ pub fn parse_input_to_int_grid(input: String) -> Grid(Int) {
 pub fn at(grid: Grid(t), coord: Coord) -> Result(t, Nil) {
   let #(row, col) = coord
   grid |> glearray.get(row) |> result.try(glearray.get(_, col))
+}
+
+pub fn at_assert(grid: Grid(t), coord: Coord) -> t {
+  at(grid, coord) |> resultx.assert_unwrap
 }
 
 pub fn includes(grid: Grid(t), coord: Coord) -> Bool {

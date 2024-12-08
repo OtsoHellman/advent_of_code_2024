@@ -1,5 +1,4 @@
 import aoc_2024/lib/grid
-import aoc_2024/utils/resultx
 import gleam/list
 import gleam/pair
 import gleam/set
@@ -13,8 +12,7 @@ type Grid =
 fn parse_antennas(grid: Grid) {
   grid
   |> grid.get_coords
-  |> list.map(grid.at(grid, _))
-  |> list.map(resultx.assert_unwrap)
+  |> list.map(grid.at_assert(grid, _))
   |> set.from_list()
   |> set.delete(".")
   |> set.to_list
@@ -49,10 +47,25 @@ fn get_one_antinode(pair: Pair) {
 pub fn pt_2(input: String) {
   let grid = input |> grid.parse_input_to_string_grid
 
-  parse_antennas(grid)
-  |> list.flat_map(get_antenna_pairs(grid, _))
-  |> list.flat_map(fn(pair) { get_all_antinodes(grid, [pair.1, pair.0]) })
-  |> list.unique
+  let antinode_coords =
+    parse_antennas(grid)
+    |> list.flat_map(get_antenna_pairs(grid, _))
+    |> list.flat_map(fn(pair) { get_all_antinodes(grid, [pair.1, pair.0]) })
+    |> list.unique
+
+  let print_predicate = fn(coord) {
+    case
+      list.contains(antinode_coords, coord)
+      && grid.at_assert(grid, coord) == "."
+    {
+      True -> Ok("#")
+      False -> Error(Nil)
+    }
+  }
+
+  grid.conditional_print(grid, print_predicate)
+
+  antinode_coords
   |> list.length
 }
 
