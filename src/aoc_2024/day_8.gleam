@@ -1,104 +1,68 @@
 import aoc_2024/lib/grid
 import aoc_2024/utils/resultx
-import gleam/io
 import gleam/list
 import gleam/pair
-import gleam/result
 import gleam/set
+
+type Pair =
+  #(grid.Coord, grid.Coord)
+
+type Grid =
+  grid.Grid(String)
+
+fn parse_antennas(grid: Grid) {
+  grid
+  |> grid.get_coords
+  |> list.map(grid.at(grid, _))
+  |> list.map(resultx.assert_unwrap)
+  |> set.from_list()
+  |> set.delete(".")
+  |> set.to_list
+}
 
 pub fn pt_1(input: String) {
   let grid = input |> grid.parse_input_to_string_grid
 
-  let antennas =
-    grid
-    |> grid.get_coords
-    |> list.map(grid.at(grid, _))
-    |> list.map(resultx.assert_unwrap)
-    |> set.from_list()
-    |> set.delete(".")
-
-  antennas
-  |> set.map(get_antenna_antinode_locations(grid, _))
-  |> set.to_list
-  |> list.flatten
+  parse_antennas(grid)
+  |> list.flat_map(get_antenna_pairs(grid, _))
+  |> list.map(get_one_antinode)
+  |> list.filter(grid.includes(grid, _))
   |> list.unique
-  |> list.filter_map(grid.at(grid, _))
   |> list.length
 }
 
-fn get_antenna_antinode_locations(
-  grid: grid.Grid(String),
-  antenna: String,
-) -> List(grid.Coord) {
-  let antenna_coords =
-    grid
-    |> grid.get_coords
-    |> list.filter(fn(coord) { grid.at(grid, coord) == Ok(antenna) })
+fn get_antenna_pairs(grid: Grid, antenna: String) -> List(Pair) {
+  grid
+  |> grid.get_coords
+  |> list.filter(fn(coord) { grid.at(grid, coord) == Ok(antenna) })
+  |> list.combination_pairs
+  |> list.flat_map(fn(pair) { [pair, pair.swap(pair)] })
+}
 
-  let pairs =
-    antenna_coords
-    |> list.combination_pairs
-    |> list.flat_map(fn(pair) { [pair, pair.swap(pair)] })
+fn get_one_antinode(pair: Pair) {
+  let #(left, right) = pair
 
-  pairs
-  |> list.map(fn(pair) {
-    let #(left, right) = pair
-    grid.get_distance(left, right)
-    |> grid.move_distance(right, _)
-  })
+  grid.get_distance(left, right)
+  |> grid.move_distance(right, _)
 }
 
 pub fn pt_2(input: String) {
   let grid = input |> grid.parse_input_to_string_grid
 
-  let antennas =
-    grid
-    |> grid.get_coords
-    |> list.map(grid.at(grid, _))
-    |> list.map(resultx.assert_unwrap)
-    |> set.from_list()
-    |> set.delete(".")
-
-  antennas
-  |> set.map(get_antenna_antinode_locations_2(grid, _))
-  |> set.to_list
-  |> list.flatten
+  parse_antennas(grid)
+  |> list.flat_map(get_antenna_pairs(grid, _))
+  |> list.flat_map(fn(pair) { get_all_antinodes(grid, [pair.1, pair.0]) })
   |> list.unique
-  |> list.filter_map(grid.at(grid, _))
   |> list.length
 }
 
-fn get_antenna_antinode_locations_2(
-  grid: grid.Grid(String),
-  antenna: String,
-) -> List(grid.Coord) {
-  let antenna_coords =
-    grid
-    |> grid.get_coords
-    |> list.filter(fn(coord) { grid.at(grid, coord) == Ok(antenna) })
+fn get_all_antinodes(grid: Grid, antinodes: List(grid.Coord)) {
+  let assert [right, left, ..] = antinodes
 
-  let pairs =
-    antenna_coords
-    |> list.combination_pairs
-    |> list.flat_map(fn(pair) { [pair, pair.swap(pair)] })
+  let antinode = get_one_antinode(#(left, right))
 
-  pairs
-  |> list.map(fn(pair) {
-    list.range(0, 60)
-    |> list.map_fold(pair, fn(pair, _) {
-      let antinode = get_one_antinode(pair)
-
-      #(#(pair.1, antinode), #(pair.1, antinode))
-    })
-  })
-  |> list.map(pair.second)
-  |> list.flatten
-  |> list.map(pair.first)
-}
-
-fn get_one_antinode(pair) {
-  let #(left, right) = pair
-
-  grid.get_distance(left, right)
-  |> grid.move_distance(right, _)
+  case grid.includes(grid, antinode) {
+    False -> antinodes
+    True -> get_all_antinodes(grid, [antinode, ..antinodes])
+  }
 }

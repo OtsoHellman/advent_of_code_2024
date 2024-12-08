@@ -60,6 +60,13 @@ pub fn at(grid: Grid(t), coord: Coord) -> Result(t, Nil) {
   grid |> glearray.get(row) |> result.try(glearray.get(_, col))
 }
 
+pub fn includes(grid: Grid(t), coord: Coord) -> Bool {
+  case at(grid, coord) {
+    Ok(_) -> True
+    _ -> False
+  }
+}
+
 pub fn copy_set(grid: Grid(t), coord: Coord, value: t) {
   let #(x, y) = coord
 
