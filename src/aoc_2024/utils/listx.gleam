@@ -45,30 +45,30 @@ pub fn pop(list: List(a)) -> #(a, List(a)) {
   result
 }
 
-pub fn min_by(input: List(a), predicate: fn(a) -> Int) {
-  input
-  |> list.reduce(fn(left, right) {
-    let left_value = predicate(left)
-    let right_value = predicate(right)
+pub fn assert_reduce(input: List(a), predicate: fn(a, a) -> a) -> a {
+  input |> list.reduce(predicate) |> resultx.assert_unwrap
+}
 
-    case int.compare(left_value, right_value) {
-      order.Gt -> right
-      _ -> left
-    }
-  })
-  |> resultx.assert_unwrap
+pub fn min_by(input: List(a), predicate: fn(a) -> Int) {
+  use left, right <- assert_reduce(input)
+
+  let left_value = predicate(left)
+  let right_value = predicate(right)
+
+  case int.compare(left_value, right_value) {
+    order.Gt -> right
+    _ -> left
+  }
 }
 
 pub fn max_by(input: List(a), predicate: fn(a) -> Int) {
-  input
-  |> list.reduce(fn(left, right) {
-    let left_value = predicate(left)
-    let right_value = predicate(right)
+  use left, right <- assert_reduce(input)
 
-    case int.compare(left_value, right_value) {
-      order.Lt -> right
-      _ -> left
-    }
-  })
-  |> resultx.assert_unwrap
+  let left_value = predicate(left)
+  let right_value = predicate(right)
+
+  case int.compare(left_value, right_value) {
+    order.Lt -> right
+    _ -> left
+  }
 }

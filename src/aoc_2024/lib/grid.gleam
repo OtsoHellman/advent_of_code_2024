@@ -77,14 +77,12 @@ pub fn map_with_coord(
   grid: Grid(a),
   fun: fn(Coord) -> Result(a, Nil),
 ) -> Grid(a) {
-  grid
-  |> get_coords
-  |> list.fold(grid, fn(grid, coord) {
-    case fun(coord) {
-      Ok(value) -> copy_set(grid, coord, value) |> resultx.assert_unwrap
-      Error(_) -> grid
-    }
-  })
+  use grid, coord <- list.fold(get_coords(grid), grid)
+
+  case fun(coord) {
+    Ok(value) -> copy_set(grid, coord, value) |> resultx.assert_unwrap
+    Error(_) -> grid
+  }
 }
 
 pub fn parse_input_to_int_grid(input: String) -> Grid(Int) {

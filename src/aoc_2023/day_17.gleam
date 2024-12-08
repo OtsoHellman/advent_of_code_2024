@@ -96,19 +96,15 @@ fn update_seen_nodes(
   seen_nodes: dict.Dict(Node, Int),
   current_weight: Int,
 ) {
-  neighbors
-  |> list.fold(seen_nodes, fn(seen_nodes, neighbor) {
-    let weight = grid |> grid.at(neighbor.coord) |> resultx.assert_unwrap
-    let new_weight = current_weight + weight
+  use seen_nodes, neighbor <- list.fold(neighbors, seen_nodes)
+  use existing_weight_option <- dict.upsert(seen_nodes, neighbor)
 
-    seen_nodes
-    |> dict.upsert(neighbor, fn(existing_weight_option) {
-      case existing_weight_option {
-        option.Some(existing_weight) -> int.min(existing_weight, new_weight)
-        option.None -> new_weight
-      }
-    })
-  })
+  let new_weight = grid.at_assert(grid, neighbor.coord) + current_weight
+
+  case existing_weight_option {
+    option.Some(existing_weight) -> int.min(existing_weight, new_weight)
+    option.None -> new_weight
+  }
 }
 
 pub fn pt_2(input: String) {
