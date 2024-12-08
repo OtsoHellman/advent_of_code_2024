@@ -173,3 +173,19 @@ pub fn get_neighbors(grid: Grid(a), coord: Coord, opts: DirectionOpts) {
     #(coords, direction) |> Ok
   })
 }
+
+pub type Distance =
+  #(Int, Int)
+
+pub fn get_distance(left: Coord, right: Coord) -> Distance {
+  let #(x1, y1) = left
+  let #(x2, y2) = right
+
+  #(x2 - x1, y2 - y1)
+}
+
+pub fn move_distance(coord: Coord, distance: Distance) -> Coord {
+  let #(row, col) = coord
+  let #(x, y) = distance
+  #(row + x, col + y)
+}
