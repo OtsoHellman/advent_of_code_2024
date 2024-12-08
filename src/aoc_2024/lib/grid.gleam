@@ -42,6 +42,19 @@ pub fn parse_input_to_string_grid(input: String) -> Grid(String) {
   |> glearray.from_list
 }
 
+pub fn map(grid: Grid(a), fun: fn(a) -> v) -> Grid(v) {
+  grid
+  |> glearray.to_list
+  |> list.map(fn(col) {
+    col |> glearray.to_list |> list.map(fun) |> glearray.from_list
+  })
+  |> glearray.from_list
+}
+
+pub fn parse_input_to_int_grid(input: String) -> Grid(Int) {
+  input |> parse_input_to_string_grid |> map(resultx.int_parse_unwrap)
+}
+
 pub fn at(grid: Grid(t), coord: Coord) -> Result(t, Nil) {
   let #(row, col) = coord
   grid |> glearray.get(row) |> result.try(glearray.get(_, col))
@@ -61,7 +74,7 @@ pub fn copy_set(grid: Grid(t), coord: Coord, value: t) {
   )
 }
 
-fn length(grid: Grid(t)) -> #(Int, Int) {
+pub fn length(grid: Grid(t)) -> #(Int, Int) {
   let rows = grid |> glearray.length
   let cols = grid |> glearray.get(0) |> resultx.assert_unwrap |> glearray.length
   #(rows, cols)
@@ -103,6 +116,23 @@ pub fn move(coord: Coord, direction: Direction) -> Coord {
   #(row + x, col + y)
 }
 
+pub fn try_move(
+  grid: Grid(a),
+  coord: Coord,
+  direction: Direction,
+) -> Result(Coord, Nil) {
+  let #(row, col) = coord
+  let #(x, y) = direction |> parse_direction
+  let #(row, col) = #(row + x, col + y)
+
+  let #(rows, cols) = grid |> length
+
+  case 0 <= row && row < rows && 0 <= col && col < cols {
+    True -> Ok(#(row, col))
+    _ -> Error(Nil)
+  }
+}
+
 pub fn opposite_direction(direction: Direction) -> Direction {
   let #(x, y) = direction |> parse_direction
   #(-x, -y) |> to_direction
@@ -133,4 +163,13 @@ pub fn get_directions(opts: DirectionOpts) {
     Diagonal -> diagonal
     All -> list.interleave([orthogonal, diagonal])
   }
+}
+
+pub fn get_neighbors(grid: Grid(a), coord: Coord, opts: DirectionOpts) {
+  opts
+  |> get_directions
+  |> list.filter_map(fn(direction) {
+    use coords <- result.try(try_move(grid, coord, direction))
+    #(coords, direction) |> Ok
+  })
 }

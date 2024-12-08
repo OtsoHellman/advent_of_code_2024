@@ -5,7 +5,7 @@ import gleam/list
 import gleam/order
 import gleam/pair
 
-pub fn min_by(input: dict.Dict(String, a), predicate: fn(a) -> Int) {
+pub fn min_by(input: dict.Dict(k, v), predicate: fn(v) -> Int) {
   input
   |> dict.to_list
   |> list.reduce(fn(left, right) {
@@ -20,7 +20,7 @@ pub fn min_by(input: dict.Dict(String, a), predicate: fn(a) -> Int) {
   |> resultx.assert_unwrap
 }
 
-pub fn max_by(input: dict.Dict(String, a), predicate: fn(a) -> Int) {
+pub fn max_by(input: dict.Dict(k, v), predicate: fn(v) -> Int) {
   input
   |> dict.to_list
   |> list.reduce(fn(left, right) {
