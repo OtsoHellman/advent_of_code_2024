@@ -30,6 +30,15 @@ pub fn find_middle_element(update: List(a)) -> Result(a, Nil) {
   |> list.first
 }
 
+pub fn replace(list: List(a), i: Int, value: a) -> List(a) {
+  let #(head, tail) = list |> list.split(i + 1)
+
+  let head =
+    head |> list.reverse |> list.drop(1) |> list.prepend(value) |> list.reverse
+
+  [head, tail] |> list.flatten
+}
+
 pub fn at_try(list: List(a), i: Int) -> Result(a, Nil) {
   list |> list.drop(i) |> list.first
 }
