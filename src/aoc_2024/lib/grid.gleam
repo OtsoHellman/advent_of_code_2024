@@ -141,6 +141,14 @@ pub fn find(grid: Grid(t), item: t) -> Result(Coord, Nil) {
   |> list.find(fn(coord) { grid |> at(coord) |> resultx.assert_unwrap == item })
 }
 
+pub fn find_all_by(grid: Grid(t), predicate: fn(t) -> Bool) -> List(Coord) {
+  grid
+  |> get_coords
+  |> list.filter(fn(coord) {
+    grid |> at(coord) |> resultx.assert_unwrap |> predicate
+  })
+}
+
 fn parse_direction(direction: Direction) -> #(Int, Int) {
   case direction_map |> list.find(fn(p) { p.0 == direction }) {
     Ok(#(_, xy)) -> xy
