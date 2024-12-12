@@ -1,7 +1,10 @@
 import aoc_2024/utils/resultx
+import gleam/bool
 import gleam/io
 import gleam/list
+import gleam/pair
 import gleam/result
+import gleam/set
 import gleam/string
 import glearray
 
@@ -227,6 +230,12 @@ pub fn get_neighbors(grid: Grid(a), coord: Coord, opts: DirectionOpts) {
   })
 }
 
+pub fn get_adjacent_coords(coord: Coord, opts: DirectionOpts) {
+  opts
+  |> get_directions
+  |> list.map(fn(direction) { #(move(coord, direction), direction) })
+}
+
 pub type Distance =
   #(Int, Int)
 
@@ -241,4 +250,62 @@ pub fn move_distance(coord: Coord, distance: Distance) -> Coord {
   let #(row, col) = coord
   let #(x, y) = distance
   #(row + x, col + y)
+}
+
+pub fn flood_fill_every_color(grid: Grid(a)) {
+  let stack = grid |> get_coords |> set.from_list
+
+  let predicate = fn(a, b) { a == b }
+
+  flood_fill_every_inner(grid, stack, [], predicate)
+}
+
+fn flood_fill_every_inner(
+  grid: Grid(a),
+  stack: set.Set(Coord),
+  groups: List(set.Set(Coord)),
+  predicate: fn(a, a) -> Bool,
+) {
+  case set.to_list(stack) {
+    [coord, ..] -> {
+      let group = flood_fill(grid, coord, predicate)
+      let stack = set.difference(stack, group)
+      let groups = [group, ..groups]
+
+      flood_fill_every_inner(grid, stack, groups, predicate)
+    }
+    [] -> groups
+  }
+}
+
+pub fn flood_fill(
+  grid: Grid(a),
+  starting_coord: Coord,
+  predicate: fn(a, a) -> Bool,
+) {
+  flood_fill_inner(grid, starting_coord, predicate, set.new())
+}
+
+fn flood_fill_inner(
+  grid: Grid(a),
+  coord: Coord,
+  predicate: fn(a, a) -> Bool,
+  result: set.Set(Coord),
+) {
+  use <- bool.guard(set.contains(result, coord), result)
+
+  let result = set.insert(result, coord)
+
+  let neighbors =
+    get_neighbors(grid, coord, Orthogonal)
+    |> list.map(pair.first)
+    |> list.filter(fn(neighbor) {
+      let left = at_assert(grid, coord)
+      let right = at_assert(grid, neighbor)
+
+      predicate(left, right)
+    })
+
+  use result, neighbor <- list.fold(neighbors, result)
+  flood_fill_inner(grid, neighbor, predicate, result)
 }

@@ -1,15 +1,9 @@
 import aoc_2024/lib/grid
-import aoc_2024/utils/listx
-import aoc_2024/utils/resultx
-import gleam/bool
 import gleam/dict
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/pair
-import gleam/result
 import gleam/set
-import gleam/string
 
 pub fn parse(input: String) -> Grid {
   input |> grid.parse_input_to_string_grid
@@ -18,19 +12,26 @@ pub fn parse(input: String) -> Grid {
 type Grid =
   grid.Grid(String)
 
+type Coord =
+  grid.Coord
+
 type Plant {
-  Plant(coord: grid.Coord, fences: Int, sides: set.Set(grid.Direction))
+  Plant(coord: Coord, fences: Int, sides: set.Set(grid.Direction))
 }
 
 type Region =
   List(Plant)
 
 pub fn pt_1(grid: Grid) {
-  grid |> grid.print
-
-  let unsolved_coords = grid |> grid.get_coords
-
-  form_regions(grid, unsolved_coords, [])
+  grid
+  |> grid.flood_fill_every_color
+  |> list.map(fn(color) {
+    color
+    |> set.to_list
+    |> list.map(fn(coord) {
+      Plant(coord, get_n_of_fences(grid, coord), get_sides(grid, coord))
+    })
+  })
   |> list.map(get_score)
   |> int.sum
 }
@@ -42,98 +43,33 @@ fn get_score(region: Region) {
   area * perimeter
 }
 
-fn form_regions(
-  grid: Grid,
-  unsolved_coords: List(grid.Coord),
-  regions: List(Region),
-) -> List(Region) {
-  use <- bool.guard(list.is_empty(unsolved_coords), regions)
+fn get_sides(grid: Grid, coord: Coord) {
+  grid.get_adjacent_coords(coord, grid.Orthogonal)
+  |> list.filter(fn(x) {
+    let #(adjacent, _) = x
 
-  let #(coord, unsolved_coords) = listx.pop(unsolved_coords)
-
-  let new_region = form_region(grid, coord, [], [])
-
-  let unsolved_coords =
-    unsolved_coords
-    |> list.filter(fn(coord) {
-      new_region
-      |> list.find(fn(plant) { plant.coord == coord })
-      |> result.is_error
-    })
-
-  let regions = regions |> list.prepend(new_region)
-  form_regions(grid, unsolved_coords, regions)
+    grid.at(grid, adjacent) != grid.at(grid, coord)
+  })
+  |> list.map(pair.second)
+  |> set.from_list
 }
 
-fn form_region(
-  grid: Grid,
-  current_coord: grid.Coord,
-  current_region: Region,
-  to_traverse: List(grid.Coord),
-) {
-  let current_plant_type = grid.at(grid, current_coord)
-
-  let neighbors = grid.get_neighbors(grid, current_coord, grid.Orthogonal)
-
-  let n_of_fences =
-    {
-      neighbors
-      |> list.count(fn(neighbor) {
-        let #(neighbor_coord, _) = neighbor
-        grid.at(grid, neighbor_coord) != current_plant_type
-      })
-    }
-    + 4
-    - {
-      neighbors
-      |> list.length
-    }
-
-  let sides =
-    grid.get_directions(grid.Orthogonal)
-    |> list.filter(fn(direction) {
-      { grid.move(current_coord, direction) |> grid.at(grid, _) }
-      != current_plant_type
-    })
-    |> set.from_list
-
-  let plant = Plant(current_coord, n_of_fences, sides)
-
-  let current_region = current_region |> list.prepend(plant)
-
-  let neighbors_to_traverse =
-    neighbors
-    |> list.filter(fn(neighbor) {
-      let #(neighbor_coord, _) = neighbor
-      grid.at(grid, neighbor_coord) == current_plant_type
-      && list.find(to_traverse, fn(coord) { coord == neighbor_coord })
-      |> result.is_error
-      && list.find(current_region, fn(plant) { plant.coord == neighbor_coord })
-      |> result.is_error
-    })
-    |> list.map(pair.first)
-
-  let to_traverse = list.flatten([to_traverse, neighbors_to_traverse])
-
-  case list.is_empty(to_traverse) {
-    True -> current_region
-    False -> {
-      let #(next_coord, to_traverse) = listx.pop(to_traverse)
-
-      form_region(grid, next_coord, current_region, to_traverse)
-    }
-  }
+fn get_n_of_fences(grid: Grid, coord: Coord) {
+  get_sides(grid, coord) |> set.size
 }
 
 pub fn pt_2(grid: Grid) {
-  grid |> grid.print
-
-  let unsolved_coords = grid |> grid.get_coords
-
-  form_regions(grid, unsolved_coords, [])
+  grid
+  |> grid.flood_fill_every_color
+  |> list.map(fn(color) {
+    color
+    |> set.to_list
+    |> list.map(fn(coord) {
+      Plant(coord, get_n_of_fences(grid, coord), get_sides(grid, coord))
+    })
+  })
   |> list.map(get_sides_score)
   |> int.sum
-  |> io.debug
 }
 
 fn get_sides_score(region: Region) {
