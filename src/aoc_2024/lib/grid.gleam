@@ -252,6 +252,11 @@ pub fn move_distance(coord: Coord, distance: Distance) -> Coord {
   #(row + x, col + y)
 }
 
+pub fn multiply(coord: Coord, n: Int) -> Coord {
+  let #(row, col) = coord
+  #(row * n, col * n)
+}
+
 pub fn flood_fill_every_color(grid: Grid(a)) {
   let stack = grid |> get_coords |> set.from_list
 
