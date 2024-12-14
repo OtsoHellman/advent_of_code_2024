@@ -36,6 +36,17 @@ const direction_map: List(#(Direction, #(Int, Int))) = [
   #(UpLeft, #(-1, 1)),
 ]
 
+pub fn new(size: #(Int, Int)) -> Grid(String) {
+  let #(cols, rows) = size
+  list.range(1, cols)
+  |> list.map(fn(_) {
+    list.range(1, rows)
+    |> list.map(fn(_) { "." })
+    |> glearray.from_list()
+  })
+  |> glearray.from_list()
+}
+
 pub fn parse_input_to_string_grid(input: String) -> Grid(String) {
   input
   |> string.split("\n")
