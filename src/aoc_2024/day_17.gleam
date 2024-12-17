@@ -1,4 +1,6 @@
+import aoc_2024/lib/cache
 import aoc_2024/lib/grid
+import aoc_2024/lib/perf
 import aoc_2024/utils/regexpx
 import aoc_2024/utils/resultx
 import gleam/bool
@@ -6,6 +8,7 @@ import gleam/float
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
 import glearray
 
@@ -16,7 +19,7 @@ fn parse_1(input: String) {
     parse_registers(registers_string),
     parse_program(program_string),
     0,
-    [],
+    "",
   )
 }
 
@@ -39,12 +42,7 @@ fn parse_program(input: String) {
 }
 
 pub type Computer {
-  Computer(
-    registers: Registers,
-    program: Program,
-    pointer: Int,
-    output: List(Int),
-  )
+  Computer(registers: Registers, program: Program, pointer: Int, output: String)
 }
 
 pub type Registers {
@@ -60,29 +58,38 @@ pub type Operation {
 
 pub fn pt_1(input: String) {
   let computer = parse_1(input)
+  let program =
+    computer.program
+    |> glearray.to_list
+    |> list.flat_map(fn(x) {
+      let Operation(a, b) = x
+      [a, b]
+    })
+    |> list.map(int.to_string)
+    |> string.join(",")
 
-  compute(computer)
+  compute(computer, "," <> program)
 }
 
-pub fn compute(computer: Computer) {
-  let current_pointer = computer.pointer |> io.debug
+pub fn compute(computer: Computer, program: String) {
+  use <- bool.guard(
+    !string.starts_with(program, computer.output),
+    computer.output,
+  )
+  let current_pointer = computer.pointer
   let next_operation = computer.program |> glearray.get(current_pointer / 2)
 
   case next_operation {
-    Error(_) ->
-      computer.output
-      |> list.reverse
-      |> list.map(int.to_string)
-      |> string.join(",")
+    Error(_) -> computer.output
 
     Ok(operation) -> {
       let new_computer = run_operation(computer, operation)
       case new_computer.pointer == current_pointer {
         True -> {
           let pointer = current_pointer + 2
-          compute(Computer(..new_computer, pointer:))
+          compute(Computer(..new_computer, pointer:), program)
         }
-        False -> compute(new_computer)
+        False -> compute(new_computer, program)
       }
     }
   }
@@ -156,7 +163,8 @@ pub fn opcode_4(computer: Computer, _operand: Int) {
 
 pub fn opcode_5(computer: Computer, operand: Int) {
   let operand = combo_operand(computer, operand)
-  let output = [operand % 8, ..computer.output]
+  let new_char = { operand % 8 } |> int.to_string
+  let output = computer.output <> "," <> new_char
 
   Computer(..computer, output:)
 }
@@ -188,6 +196,67 @@ pub fn combo_operand(computer: Computer, operand: Int) {
   }
 }
 
-pub fn pt_2(_input: String) {
-  1
+pub fn pt_2(input: String) {
+  use <- perf.measure("pt2")
+  let computer = parse_1(input)
+  let program =
+    computer.program
+    |> glearray.to_list
+    |> list.flat_map(fn(x) {
+      let Operation(a, b) = x
+      [a, b]
+    })
+    |> list.map(int.to_string)
+    |> string.join(",")
+
+  solve_2(computer, "," <> program, "", 4, 0)
+  |> result.map(int.base_parse(_, 2))
+}
+
+pub fn solve_2(
+  computer: Computer,
+  program: String,
+  base: String,
+  base_length: Int,
+  n: Int,
+) {
+  use <- bool.guard(base_length >= 34, { Ok(base) })
+  let next_base = find_next_base(computer, program, base, base_length, n)
+
+  use <- bool.guard(result.is_error(next_base), Error(Nil))
+
+  let assert Ok(#(register, n)) = next_base
+
+  let new_base = int.to_base2(register)
+  let new_base_length = base_length + 2
+  case solve_2(computer, program, new_base, new_base_length, 0) {
+    Ok(base) -> Ok(base)
+
+    Error(_) -> solve_2(computer, program, base, new_base_length, n + 1)
+  }
+}
+
+fn find_next_base(
+  computer: Computer,
+  program: String,
+  base: String,
+  base_length: Int,
+  n: Int,
+) {
+  use <- bool.guard(10_000_000 <= n, Error(n))
+
+  let binary_register = int.to_base2(n) <> base
+  let register = int.base_parse(binary_register, 2) |> resultx.assert_unwrap
+
+  use <- bool.guard(164_540_692_000_000 <= register, Error(n))
+
+  let registers = Registers(register, 0, 0)
+  let new_computer = Computer(..computer, registers:)
+
+  let result = compute(new_computer, program)
+
+  case result |> string.length {
+    x if base_length <= x -> Ok(#(register, n))
+    _ -> find_next_base(computer, program, base, base_length, n + 1)
+  }
 }
