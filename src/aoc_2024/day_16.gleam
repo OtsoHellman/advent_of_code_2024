@@ -1,14 +1,12 @@
+import aoc_2024/lib/algos
 import aoc_2024/lib/grid
 import aoc_2024/utils/dictx
 import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/dict
-import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option
-import gleam/result
-import gleam/set
+import gleam/pair
 
 pub fn parse(input: String) {
   input |> grid.parse_input_to_string_grid
@@ -19,36 +17,24 @@ pub fn pt_1(grid: grid.Grid(String)) {
   let starting_directon = grid.Right
   let starting_node = Node(starting_coord, starting_directon)
 
-  dijkstra_1(grid, set.new(), dict.from_list([#(starting_node, 0)]))
+  algos.dijkstra(
+    starting_node,
+    fn(node) { grid.at_assert(grid, node.coord) == "E" },
+    fn(node) { get_neighbors(grid, node) },
+    fn(node, score, neighbor) {
+      case neighbor.direction == node.direction {
+        False -> score + 1000
+        True -> score + 1
+      }
+    },
+  )
+  |> list.first
+  |> resultx.assert_unwrap
+  |> pair.second
 }
 
 pub type Node {
   Node(coord: grid.Coord, direction: grid.Direction)
-}
-
-fn dijkstra_1(
-  grid: grid.Grid(String),
-  solved_nodes: set.Set(Node),
-  seen_nodes: dict.Dict(Node, Int),
-) -> Int {
-  let #(current_node, current_score) =
-    seen_nodes
-    |> dictx.min_by(fn(score) { score })
-
-  use <- bool.guard(
-    grid.at_assert(grid, current_node.coord) == "E",
-    current_score,
-  )
-
-  let solved_nodes = solved_nodes |> set.insert(current_node)
-  let seen_nodes = seen_nodes |> dict.delete(current_node)
-
-  let seen_nodes =
-    get_neighbors(grid, current_node)
-    |> list.filter(fn(node) { !set.contains(solved_nodes, node) })
-    |> update_seen_nodes_1(seen_nodes, current_score, current_node.direction)
-
-  dijkstra_1(grid, solved_nodes, seen_nodes)
 }
 
 fn get_neighbors(grid: grid.Grid(String), current_node: Node) {
@@ -73,26 +59,6 @@ fn get_neighbors(grid: grid.Grid(String), current_node: Node) {
       False -> Node(current_coord, direction)
     }
   })
-}
-
-fn update_seen_nodes_1(
-  neighbors: List(Node),
-  seen_nodes: dict.Dict(Node, Int),
-  current_score: Int,
-  current_direction: grid.Direction,
-) {
-  use seen_nodes, neighbor <- list.fold(neighbors, seen_nodes)
-  use existing_pair_option <- dict.upsert(seen_nodes, neighbor)
-
-  let new_score = case neighbor.direction == current_direction {
-    False -> current_score + 1000
-    True -> current_score + 1
-  }
-
-  case existing_pair_option {
-    option.Some(existing_weight) -> int.min(existing_weight, new_score)
-    option.None -> new_score
-  }
 }
 
 pub fn pt_2(grid: grid.Grid(String)) {
