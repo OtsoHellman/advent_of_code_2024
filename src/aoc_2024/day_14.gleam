@@ -2,9 +2,7 @@ import aoc_2024/lib/grid
 import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/dict
-import gleam/erlang/node
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/regexp
 import gleam/string
@@ -39,18 +37,18 @@ pub fn pt_1(robots: List(Robot)) {
   robots |> list.map(move_n) |> get_score
 }
 
-fn print(robot: Robot) {
-  "" |> io.debug
-  let Robot(p, _) = robot
-  p |> io.debug
+// fn print(robot: Robot) {
+//   "" |> io.debug
+//   let Robot(p, _) = robot
+//   p |> io.debug
 
-  robot
-}
+//   robot
+// }
 
 fn move_n(robot: Robot) {
   let n = 100
 
-  use robot, i <- list.fold(list.range(1, n), robot)
+  use robot, _i <- list.fold(list.range(1, n), robot)
   move(robot)
 }
 

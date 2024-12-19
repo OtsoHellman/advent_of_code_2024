@@ -2,7 +2,6 @@ import aoc_2024/lib/grid
 import aoc_2024/utils/resultx
 import gleam/dict
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/string
 

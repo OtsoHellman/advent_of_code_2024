@@ -1,8 +1,6 @@
 import aoc_2024/lib/grid
-import aoc_2024/utils/listx
 import gleam/bool
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/pair
 import gleam/set

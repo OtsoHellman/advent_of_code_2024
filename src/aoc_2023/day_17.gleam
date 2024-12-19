@@ -1,7 +1,6 @@
 import aoc_2024/lib/grid
 import aoc_2024/lib/perf
 import aoc_2024/utils/dictx
-import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/dict
 import gleam/int

@@ -1,12 +1,9 @@
-import aoc_2024/lib/cache
-import aoc_2024/lib/grid
 import aoc_2024/lib/perf
 import aoc_2024/utils/regexpx
 import aoc_2024/utils/resultx
 import gleam/bool
 import gleam/float
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
