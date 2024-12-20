@@ -1,5 +1,6 @@
 import aoc_2024/utils/resultx
 import gleam/bool
+import gleam/int
 import gleam/io
 import gleam/list
 import gleam/pair
@@ -270,6 +271,15 @@ pub fn get_distance(left: Coord, right: Coord) -> Distance {
   let #(x2, y2) = right
 
   #(x2 - x1, y2 - y1)
+}
+
+pub fn get_manhattan_distance(left: Coord, right: Coord) -> Int {
+  get_distance(left, right)
+  |> fn(pair) {
+    let #(x, y) = pair
+
+    int.absolute_value(x) + int.absolute_value(y)
+  }
 }
 
 pub fn move_distance(coord: Coord, distance: Distance) -> Coord {
