@@ -186,7 +186,7 @@ fn parse_direction(direction: Direction) -> #(Int, Int) {
   }
 }
 
-fn to_direction(xy: #(Int, Int)) -> Direction {
+pub fn to_direction(xy: #(Int, Int)) -> Direction {
   case direction_map |> list.find(fn(p) { p.1 == xy }) {
     Ok(#(direction, _)) -> direction
     _ -> panic
